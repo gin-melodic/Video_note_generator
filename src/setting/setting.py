@@ -1,0 +1,26 @@
+# Initialize global settings
+global_setting = {
+    "openrouter_api_key": '',
+    "openrouter_api_url": 'https://openrouter.ai/api/v1',
+    "openrouter_app_name": 'https://github.com',
+    "openrouter_http_referer": '',
+    "unsplash_access_key": '',
+    "unsplash_secret_key": '',
+    "unsplash_redirect_uri": 'https://github.com',
+    "whisper_model": 'medium',
+    "whisper_language": 'zh',
+    "ffmpeg_path": '',
+    "http_proxy": '',
+    "https_proxy": '',
+    "output_dir": 'generated_notes',
+    "max_tokens": 5000,
+    "content_chunk_size": 2000,
+    "temperature": 0.7,
+    "top_p": 0.9,
+    "use_emoji": True,
+    "tag_count": 5,
+    "min_paragraphs": 3,
+    "max_paragraphs": 6,
+    "debug": False,
+    "log_level": 'info'
+}
