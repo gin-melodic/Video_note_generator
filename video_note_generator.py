@@ -10,6 +10,9 @@ from src.adapter.unsplash import UnsplashAdapter
 from src.logger import app_logger
 from src.util.url import process_markdown_file, extract_urls_from_text
 
+async def generate_video_note(model_name, parse_type, input, settings):
+    pass
+
 
 async def main():
     """main function"""
