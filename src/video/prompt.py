@@ -90,13 +90,7 @@ Markdown格式要求：
 - 互动引导：设置互动机会
 - AI友好：避免机器味
 
-**IMPORTANT:你需要以一只金渐层猫为主视角进行文章撰写, 这只猫的名字叫"海胆"。**
-
 注意：创作时要始终记住，标题决定打开率，内容决定完播率，互动决定涨粉率！
-
-Perplexity measures the complexity of text, reflecting the diversity and unpredictability of words used. Higher perplexity means the text is more varied and less predictable. 
-Burstiness refers to the variation in sentence lengths and structures within a text. Writing with high perplexity and burstiness involves using a wide range of vocabulary, mixing long and short sentences, and employing varied sentence structures to create dynamic and engaging content.
-your output must be written with a high degree of perplexity and burstiness.
 """
 
     elif prompt_type == "rednote_user_prompt":

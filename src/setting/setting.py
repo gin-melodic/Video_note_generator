@@ -32,15 +32,11 @@ global_setting = {
 
 
 def update_and_save_settings(*args):
-    app_logger.info(f"Updating settings with arguments: {args}")
     keys = list(global_setting.keys())
-    app_logger.info(f"Keys: {keys}")
     updated_settings = {key: value for key, value in zip(keys, args)}
     global_setting.update(updated_settings)
 
-    app_logger.info(f"Updated settings: {global_setting}")
     required_keys_filled = check_required_keys()
-    app_logger.info(f"Required keys filled: {required_keys_filled}")
     status_message = "设置已更新" if required_keys_filled else "⚠️ 必选参数配置缺失"
 
     # convert global_setting to json str
@@ -53,10 +49,8 @@ def update_and_save_settings(*args):
 def load_settings(saved_settings: str):
     try:
         # convert json str to dict
-        app_logger.info(f"load setting from localstorage: {saved_settings}")
         if saved_settings:
             saved_settings = json.loads(saved_settings)
-            app_logger.info(f"Saved global_setting settings: {saved_settings}")
             global_setting.update(saved_settings)
     except Exception as e:
         gr.Error(f"Error loading settings: {e}")
@@ -73,8 +67,7 @@ def load_settings(saved_settings: str):
     return [return_dict[key] for key in return_dict.keys()]
 
 
-def check_required_keys(setting_str: str = None):
-    app_logger.info(f"Get global_setting settings: {global_setting}")
+def     check_required_keys(setting_str: str = None):
     if setting_str:
         setting_dict = json.loads(setting_str)
         global_setting.update(setting_dict)

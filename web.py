@@ -1,21 +1,37 @@
 import gradio as gr
 import time
 from gradio_modal import Modal
+
+from src.logger import app_logger
 from src.setting.setting import global_setting, check_required_keys, load_settings, update_and_save_settings
+from video_note_generator import generate_video_note
+
 
 def update_input_visibility(choice):
     return (
         gr.update(visible=(choice == "单URL")),
-        gr.update(visible=(choice == "多行URL文档")),
+        # gr.update(visible=(choice == "多行URL文档")),
         gr.update(visible=(choice == "MD文档")),
         gr.update(visible=(choice == "本地视频文件"))
     )
 
-def generate_btn_if_enabled(model_name, parse_type, url_input, file_input, md_file_input, local_video_input):
+def check_if_valid_url(content):
+    if not content:
+        return False
+    try:
+        urls = content.split('\n')
+        for url in urls:
+            url = url.strip()
+            if not url.startswith("http") and not url.startswith("https"):
+                return False
+        return True
+    except Exception as e:
+        return False
+
+def generate_btn_if_enabled(model_name, parse_type, url_input, md_file_input, local_video_input):
     required_keys_valid = check_required_keys()
     input_valid = (
-        (parse_type == "单URL" and url_input) or
-        (parse_type == "多行URL文档" and file_input) or
+        (parse_type == "单URL" and check_if_valid_url(url_input)) or
         (parse_type == "MD文档" and md_file_input) or
         (parse_type == "本地视频文件" and local_video_input)
     )
@@ -32,20 +48,19 @@ def main():
                                     interactive=True)
             parse_type = gr.Radio(
                 label="解析内容",
-                choices=["单URL", "多行URL文档", "MD文档", "本地视频文件"],
+                choices=["单URL", "MD文档", "本地视频文件"],
                 value="单URL", interactive=True
             )
 
         with gr.Group():
             url_input = gr.Textbox(label="url 名称", visible=True, interactive=True)
-            file_input = gr.File(label="上传文档", visible=False, interactive=True, type='binary')
             md_file_input = gr.File(label="上传文档", visible=False, interactive=True, type='binary')
-            local_video_input = gr.File(label="上传视频", visible=False, interactive=True, type='binary')
+            local_video_input = gr.File(label="上传视频", visible=False, interactive=True, type='filepath')
 
         parse_type.change(
             fn=update_input_visibility,
             inputs=[parse_type],
-            outputs=[url_input, file_input, md_file_input, local_video_input]
+            outputs=[url_input, md_file_input, local_video_input]
         )
 
         with gr.Row():
@@ -56,22 +71,22 @@ def main():
 
         # Add event listeners to update generate_btn
         model_name.change(generate_btn_if_enabled,
-                          inputs=[model_name, parse_type, url_input, file_input, md_file_input, local_video_input],
+                          inputs=[model_name, parse_type, url_input, md_file_input, local_video_input],
                           outputs=generate_btn)
         parse_type.change(generate_btn_if_enabled,
-                          inputs=[model_name, parse_type, url_input, file_input, md_file_input, local_video_input],
+                          inputs=[model_name, parse_type, url_input, md_file_input, local_video_input],
                           outputs=generate_btn)
         url_input.change(generate_btn_if_enabled,
-                         inputs=[model_name, parse_type, url_input, file_input, md_file_input, local_video_input],
+                         inputs=[model_name, parse_type, url_input, md_file_input, local_video_input],
                          outputs=generate_btn)
-        file_input.change(generate_btn_if_enabled,
-                          inputs=[model_name, parse_type, url_input, file_input, md_file_input, local_video_input],
-                          outputs=generate_btn)
+        # file_input.change(generate_btn_if_enabled,
+        #                   inputs=[model_name, parse_type, url_input, md_file_input, local_video_input],
+        #                   outputs=generate_btn)
         md_file_input.change(generate_btn_if_enabled,
-                             inputs=[model_name, parse_type, url_input, file_input, md_file_input, local_video_input],
+                             inputs=[model_name, parse_type, url_input, md_file_input, local_video_input],
                              outputs=generate_btn)
         local_video_input.change(generate_btn_if_enabled,
-                                 inputs=[model_name, parse_type, url_input, file_input, md_file_input,
+                                 inputs=[model_name, parse_type, url_input, md_file_input,
                                          local_video_input], outputs=generate_btn)
 
         with Modal(visible=False) as settings_modal:
@@ -171,24 +186,38 @@ def main():
         result_status = gr.Textbox('生成中...', interactive=False, visible=False, show_label=False)
         with gr.Tabs(visible=False) as result_tabs:
 
-            with gr.TabItem("转录文档"):
-                transcript_output = gr.Markdown()
+            with gr.TabItem("原始笔记"):
+                transcript_output = gr.Markdown(show_copy_button=True)
 
-            with gr.TabItem("整理文档"):
-                organized_output = gr.Markdown()
+            with gr.TabItem("整理版笔记"):
+                organized_output = gr.Markdown(show_copy_button=True)
 
-            with gr.TabItem("小红书文档"):
-                xiaohongshu_output = gr.Markdown()
-                download_image_button = gr.Button("下载图片", interactive=False)
+            with gr.TabItem("小红书版本"):
+                xiaohongshu_output = gr.Markdown(show_copy_button=True)
+                with gr.Row():
+                    note_images = gr.Gallery(label='推荐配图',
+                                             show_label=False, columns=[3], rows=[1],
+                                             object_fit="contain", height="auto")
 
         # 生成
         def on_btn_click():
             return gr.Button(interactive=False), gr.Tabs(visible=True), gr.Textbox('生成中...', interactive=False, visible=True, show_label=False)
 
-        def generate(*args):
-            # TODO: 调用逻辑
-            time.sleep(3)  # 模拟耗时操作
-            return ["这是生成的转录文档", "这是整理后的文档", "这是小红书文档", gr.Button(interactive=True)]
+        async def generate(*args):
+            # 调用逻辑
+            model_name = args[0]
+            gen_parse_type = args[1]
+            input_content = None
+            if gen_parse_type == "单URL":
+                input_content = args[2]
+            elif gen_parse_type == "MD文档":
+                input_content = args[3]
+            elif gen_parse_type == "本地视频文件":
+                input_content = args[4]
+
+            notice_info, transcript_output_tran, organized_output_tran, xiaohongshu_output_tran, images = await generate_video_note(model_name, gen_parse_type, input_content)
+
+            return [gr.Textbox(notice_info, visible=True), transcript_output_tran, organized_output_tran, xiaohongshu_output_tran, gr.Button(interactive=True), images]
 
         def after_slow_function():
             return gr.Button(interactive=True), gr.Textbox('生成中...', interactive=False, visible=False, show_label=False)
@@ -199,8 +228,8 @@ def main():
         ).then(
             fn=generate,
             inputs = [model_name, parse_type,
-                    url_input, file_input, md_file_input, local_video_input, local_storage],
-            outputs=[transcript_output, organized_output, xiaohongshu_output, download_image_button]
+                    url_input, md_file_input, local_video_input, local_storage],
+            outputs=[warning_icon, transcript_output, organized_output, xiaohongshu_output, generate_btn, note_images]
         ).then(
             fn=after_slow_function,
             outputs=[generate_btn, result_status]
