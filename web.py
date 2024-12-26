@@ -1,8 +1,6 @@
 import gradio as gr
-import time
 from gradio_modal import Modal
 
-from src.logger import app_logger
 from src.setting.setting import global_setting, check_required_keys, load_settings, update_and_save_settings
 from video_note_generator import generate_video_note
 

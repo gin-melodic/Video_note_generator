@@ -5,12 +5,16 @@
 ![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
 ![Python](https://img.shields.io/badge/python-3.8+-green.svg)
 
-## 👤 作者信息
+## Huggingface space: [rednote-gen](https://huggingface.co/spaces/windane/rednote-gen)
+PS: 最好还是本地运行，Space 直接下载视频失败率高，可以使用MD文件解析。
+
+## 👤 原作者信息
 
 - **作者**：玄清
 - **博客**：[天天悦读](https://blog.example.com)
 - **Email**：grow8org@gmail.com
 - **GitHub**：[whotto/Video_note_generator](https://github.com/whotto/Video_note_generator)
+
 
 ## 🎯 应用场景
 
